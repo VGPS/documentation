@@ -1598,3 +1598,84 @@ spec:
         - NEW_VULNERABILITY
         - POLICY_VIOLATION
 ```
+Would you like me to:
+1. Provide more details about specific components?
+2. Explain the relationship between open source and commercial parts?
+3. Show examples of how to use the public repositories?
+4. Detail the contribution process?
+
+Yes, there are public repositories related to Red Hat Advanced Cluster Security (formerly StackRox). However, it's important to note that not all components are open source.
+
+Here are the key repositories:
+
+1. Main Repository (RHACS Operator):
+```plaintext
+https://github.com/stackrox/stackrox
+```
+
+2. Secured Workflows Repository:
+```plaintext
+https://github.com/stackrox/secured-workflows
+```
+
+3. Kubernetes Collector:
+```plaintext
+https://github.com/stackrox/collector
+```
+
+4. StackRox Ecosystem:
+```plaintext
+https://github.com/stackrox-ecosystem
+```
+
+Key Points to Note:
+
+1. Community Access:
+- Some components remain proprietary
+- Not all features available in commercial version are in public repos
+- Documentation and examples are publicly available
+
+2. Open Source Components Include:
+- Kubernetes Operators
+- Collectors and Sensors
+- Integration examples
+- Deployment templates
+- Policy examples
+
+3. Commercial vs Open Source:
+```yaml
+Components:
+  OpenSource:
+    - Basic Kubernetes Operators
+    - Deployment Templates
+    - Policy Examples
+    - Integration Examples
+    
+  Commercial:
+    - Central Management Console
+    - Advanced Analytics Engine
+    - Proprietary Scanning Engines
+    - Enterprise Support
+    - Advanced Features
+```
+
+4. Key Directories in Main Repo:
+```plaintext
+stackrox/
+├── operator/
+│   ├── bundle/
+│   └── helm/
+├── sensor/
+│   └── kubernetes/
+├── collector/
+│   └── compliance/
+└── docs/
+    └── development/
+```
+
+Would you like me to:
+1. Provide more details about specific components?
+2. Explain the relationship between open source and commercial parts?
+3. Show examples of how to use the public repositories?
+4. Detail the contribution process?
+
