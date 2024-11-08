@@ -1409,3 +1409,192 @@ Would you like me to:
 3. Explain advanced container security policies?
 4. Demonstrate additional automation workflows?
 
+I'll break down the relationship between container registries, Git repositories, and how ACS interacts with them in detail.
+
+1. CONTAINER REGISTRY VS GIT REPOSITORY:
+
+A. Container Registry:
+- Purpose: Stores built container images
+- Examples: 
+  * Docker Hub
+  * Amazon Elastic Container Registry (ECR)
+  * Google Container Registry (GCR)
+  * Azure Container Registry (ACR)
+  * Red Hat Quay
+
+```plaintext
+Registry Structure Example:
+registry.example.com/
+├── project/
+│   ├── app:1.0.0
+│   ├── app:1.0.1
+│   └── app:latest
+└── base-images/
+    ├── nginx:1.21
+    └── python:3.9
+```
+
+B. Git Repository:
+- Purpose: Stores source code and configuration
+- Examples:
+  * GitHub
+  * GitLab
+  * Bitbucket
+
+```plaintext
+Git Repository Structure Example:
+my-application/
+├── src/
+│   └── app.py
+├── tests/
+│   └── test_app.py
+├── Dockerfile
+└── kubernetes/
+    └── deployment.yaml
+```
+
+2. INTERACTION FLOW:
+
+```mermaid
+graph TD
+    A[Git Repository] -->|1. Code Change| B[CI/CD Pipeline]
+    B -->|2. Build Image| C[Container Image]
+    C -->|3. Push Image| D[Container Registry]
+    D -->|4. ACS Scans| E[ACS Security Analysis]
+    E -->|5. Deploy if Secure| F[Kubernetes Cluster]
+    F -->|6. Runtime Scan| G[ACS Runtime Analysis]
+```
+
+3. DETAILED SCANNING PROCESS:
+
+A. Registry Scanning Configuration:
+```yaml
+apiVersion: platform.stackrox.io/v1alpha1
+kind: ImageIntegration
+metadata:
+  name: registry-scanning
+spec:
+  registries:
+    - name: "production-registry"
+      type: "docker"
+      endpoint: "registry.example.com"
+      credentials:
+        username: "${REGISTRY_USER}"
+        password: "${REGISTRY_PASSWORD}"
+      
+    - name: "development-registry"
+      type: "ecr"
+      region: "us-west-2"
+      credentials:
+        aws:
+          roleArn: "arn:aws:iam::account:role/registry-scanner"
+
+  scanSettings:
+    schedule: "*/30 * * * *"  # Every 30 minutes
+    concurrentScans: 5
+    retentionPeriod: 30d
+    
+  notifications:
+    - type: "slack"
+      channel: "#security-alerts"
+      events: ["NEW_CRITICAL_CVE"]
+```
+
+4. CI/CD INTEGRATION:
+
+A. Jenkins Pipeline Example:
+```groovy
+pipeline {
+    agent any
+    environment {
+        DOCKER_REGISTRY = 'registry.example.com'
+        GIT_REPO = 'git@github.com:org/app.git'
+        ACS_API_TOKEN = credentials('acs-api-token')
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: "${GIT_REPO}"
+            }
+        }
+        
+        stage('Build Image') {
+            steps {
+                script {
+                    docker.build("${DOCKER_REGISTRY}/app:${BUILD_NUMBER}")
+                }
+            }
+        }
+        
+        stage('Security Scan') {
+            steps {
+                script {
+                    // ACS Pre-deployment scan
+                    sh """
+                        roxctl image scan \
+                        --endpoint="${ACS_CENTRAL}" \
+                        --image="${DOCKER_REGISTRY}/app:${BUILD_NUMBER}" \
+                        --output=json > scan_results.json
+                    """
+                    
+                    // Parse results
+                    def scanResults = readJSON file: 'scan_results.json'
+                    if (scanResults.criticalVulnerabilities > 0) {
+                        error "Critical vulnerabilities found"
+                    }
+                }
+            }
+        }
+        
+        stage('Push to Registry') {
+            steps {
+                script {
+                    docker.withRegistry("https://${DOCKER_REGISTRY}", 'registry-credentials') {
+                        docker.image("${DOCKER_REGISTRY}/app:${BUILD_NUMBER}").push()
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
+5. CONTINUOUS MONITORING:
+
+A. Registry Monitoring Configuration:
+```yaml
+apiVersion: platform.stackrox.io/v1alpha1
+kind: ImageMonitoring
+metadata:
+  name: registry-monitoring
+spec:
+  watchPatterns:
+    - registry: "registry.example.com"
+      repositories:
+        - "project/*"
+        - "base-images/*"
+      tags:
+        - "latest"
+        - "prod-*"
+        
+  vulnerabilityThresholds:
+    critical: 0
+    high: 3
+    medium: 5
+    
+  actions:
+    onViolation:
+      - type: ALERT
+        severity: High
+      - type: BLOCK_DEPLOYMENT
+        conditions:
+          criticalVulnerabilities: true
+          
+  notifications:
+    slack:
+      channel: "#security-alerts"
+      events:
+        - NEW_VULNERABILITY
+        - POLICY_VIOLATION
+```
