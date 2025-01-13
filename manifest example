@@ -1,0 +1,99 @@
+java ${JAVA_OPTS} -cp "/app:/app/lib/*" $(awk -F '[\r\n]+ ' 'BEGIN {RS = ""} { for (i = 1; i<=NF; i++) {printf("%s", $i) } }' /app/META-INF/MANIFEST.MF | awk -F '[\r\n ]' '/^Start-Class/ { print $2}') ${APP_ARGS}
+ENVAPP_ARGS=""
+COPYdir:0ea2e054322b5392aa6ca9b2f3d90dc095bcef58f360aaa1097718647cbc1ce8 in /app
+COPYdir:2c8018830335d63683d212b116c73c0357ea086c0cb9a85cb72b200dddc3c4ed in /app/META-INF
+COPYdir:89a82e5e05734c6be337a61a81d4bc43b38a18ce3d59bf3fb7917904ad3d1a1b in /app/lib
+USER1000
+LABELversion="1.25.0-SNAPSHOT" name="ecc-cms-api"
+USER185
+RUNmv -fZ /tmp/ubi.repo /etc/yum.repos.d/ubi.repo || :
+USERroot
+USER185
+RUNrm -f /tmp/tls-ca-bundle.pem
+RUNrm -f '/etc/yum.repos.d/odcs-3727260-14f73.repo' '/etc/yum.repos.d/odcs-3727309-d6121.repo'
+USERroot
+LABEL"release"="1.1733300792" "distribution-scope"="public" "vendor"="Red Hat, Inc." "build-date"="2024-12-04T08:27:30" "architecture"="x86_64" "vcs-type"="git" "vcs-ref"="dbbee53ba060c64457063c6f042d737550031418" "url"="https://access.redhat.com/containers/#/registry.access.redhat.com/ubi8/openjdk-17-runtime/images/1.21-1.1733300792"
+ADDfile:b4da7816352ffabf61baeceff5d455be59da095dc0f3d10b1523ee01d35df5e7 in /root/buildinfo/Dockerfile-ubi8-openjdk-17-runtime-1.21-1.1733300792
+ADDfile:c5d5761e7f97cdf2a47a580bdcdc67308586a556d0d41c2a38f414c41a2c0670 in /root/buildinfo/content_manifests/openjdk-17-runtime-ubi8-container-1.21-1.1733300792.json
+ADDfile:a7baa636a2a62f4e9e89e7e9980f0673550cd8a4ff4ff7c13bb031b55f1bad73 in /help.1
+CMD["/opt/jboss/container/java/run/run-java.sh"]
+WORKDIR/home/jboss
+USER185
+RUNrm -rf "/var/cache/yum" "/var/lib/dnf" "/var/cache/apt" "/var/cache/dnf"
+RUNrm -rf "/tmp/scripts" "/tmp/artifacts"
+USERroot
+EXPOSE8080 8443
+LABELcom.redhat.component="openjdk-17-runtime-ubi8-container" com.redhat.license_terms="https://www.redhat.com/en/about/red-hat-end-user-license-agreements#UBI" description="Image for Red Hat OpenShift providing OpenJDK 17 runtime" io.cekit.version="4.13.0.dev0" io.k8s.description="Platform for running plain Java applications (fat-jar and flat classpath)" io.k8s.display-name="Java Applications" io.openshift.tags="java" maintainer="Red Hat OpenJDK <openjdk@redhat.com>" name="ubi8/openjdk-17-runtime" org.opencontainers.image.documentation="https://rh-openjdk.github.io/redhat-openjdk-containers/" summary="Image for Red Hat OpenShift providing OpenJDK 17 runtime" usage="https://rh-openjdk.github.io/redhat-openjdk-containers/" version="1.21"
+ENVJBOSS_IMAGE_NAME="ubi8/openjdk-17-runtime" JBOSS_IMAGE_VERSION="1.21" LANG="C.utf8"
+RUN[ "sh", "-x", "/tmp/scripts/jboss.container.java.run/backward_compatibility.sh" ]
+USERroot
+RUN[ "sh", "-x", "/tmp/scripts/jboss.container.java.run/configure.sh" ]
+USERroot
+ENVJAVA_DATA_DIR="/deployments/data" JBOSS_CONTAINER_JAVA_RUN_MODULE="/opt/jboss/container/java/run"
+COPYdir:6f64fc507cc30097a06179c54dfcf48792fd66b088003d03ca17ae930a2b1d3c in /tmp/scripts/jboss.container.java.run
+RUN[ "sh", "-x", "/tmp/scripts/jboss.container.util.logging.bash/backward_compatibility.sh" ]
+USERroot
+RUN[ "sh", "-x", "/tmp/scripts/jboss.container.util.logging.bash/configure.sh" ]
+USERroot
+ENVJBOSS_CONTAINER_UTIL_LOGGING_MODULE="/opt/jboss/container/util/logging/"
+COPYdir:dbf9d7dcb045fc1331a9c7b46e3b1b22e2dea004cb796b278886a4e94052a219 in /tmp/scripts/jboss.container.util.logging.bash
+RUN[ "sh", "-x", "/tmp/scripts/jboss.container.java.jvm.bash/backward_compatibility.sh" ]
+USERroot
+RUN[ "sh", "-x", "/tmp/scripts/jboss.container.java.jvm.bash/configure.sh" ]
+USERroot
+ENVJBOSS_CONTAINER_JAVA_JVM_MODULE="/opt/jboss/container/java/jvm"
+COPYdir:6c4161226a7631d4f88212c80df533babadded3b2813c0b925f7c4cadb20e3f8 in /tmp/scripts/jboss.container.java.jvm.bash
+RUN[ "sh", "-x", "/tmp/scripts/jboss.container.java.proxy.bash/backward_compatibility.sh" ]
+USERroot
+RUN[ "sh", "-x", "/tmp/scripts/jboss.container.java.proxy.bash/configure.sh" ]
+USERroot
+ENVJBOSS_CONTAINER_JAVA_PROXY_MODULE="/opt/jboss/container/java/proxy"
+COPYdir:10bd3cf0d564e2bca91ef0448e1d1e04c4a7368a8f072d68c22b6ad41eef3199 in /tmp/scripts/jboss.container.java.proxy.bash
+RUNmicrodnf --setopt=install_weak_deps=0 --setopt=tsflags=nodocs install -y tar && microdnf clean all && rpm -q tar
+USERroot
+RUN[ "sh", "-x", "/tmp/scripts/jboss.container.util.tzdata/execute.sh" ]
+USERroot
+COPYdir:24dd93fb8c27b0aca3dfee5588f561542018f7a84a555a4952a160eebfa7ca6d in /tmp/scripts/jboss.container.util.tzdata
+RUN[ "sh", "-x", "/tmp/scripts/jboss.container.openjdk.jre/configure.sh" ]
+USERroot
+LABELorg.jboss.product="openjdk" org.jboss.product.openjdk.version="17" org.jboss.product.version="17"
+ENVJAVA_HOME="/usr/lib/jvm/jre" JAVA_VENDOR="openjdk" JAVA_VERSION="17" JBOSS_CONTAINER_OPENJDK_JRE_MODULE="/opt/jboss/container/openjdk/jre"
+RUNmicrodnf --setopt=install_weak_deps=0 --setopt=tsflags=nodocs install -y java-17-openjdk-headless && microdnf clean all && rpm -q java-17-openjdk-headless
+USERroot
+COPYdir:8a79043a5552b486688876d9c6e8af41f8df3a3f38aa86ec18302e5d750eea6d in /tmp/scripts/jboss.container.openjdk.jre
+RUN[ "sh", "-x", "/tmp/scripts/jboss.container.user/configure.sh" ]
+USER root
+ENVGECOS="JBoss user" HOME="/home/jboss" UID="185" USER="jboss"
+RUN microdnf --setopt=install_weak_deps=0 --setopt=tsflags=nodocs install -y shadow-utils && microdnf clean all && rpm -q shadow-utils
+USER root
+COPY dir:7ff7f3ceaeb3669bfdc46c5c070d2dce198269a228bf2e4193e142e7d5fd0a84 in /tmp/scripts/jboss.container.user
+RUN [ "sh", "-x", "/tmp/scripts/jboss.container.util.pkg-update/execute.sh" ]
+USER root
+COPY dir:54dcc7b102ac01bbd8885d099d35b4d9145300ae85275013fcf3cd9c10609ba9 in /tmp/scripts/jboss.container.util.pkg-update
+USER root
+ADD multi:c22a25dbcdeeb76203e854bc5e61e815d7dc03306c987061617e525dbe3b294d in /etc/yum.repos.d/
+ADD file:df13b6a4fdeac4626ab7cd7e99d16d30edc6e3e5441295ae7691bee26604a5b1 in /tmp/tls-ca-bundle.pem
+RUN mv -f /etc/yum.repos.d/ubi.repo /tmp || :
+RUN mv -fZ /tmp/ubi.repo /etc/yum.repos.d/ubi.repo || :
+RUN rm -f /tmp/tls-ca-bundle.pem
+RUN rm -f '/etc/yum.repos.d/repo-fa9f4.repo' '/etc/yum.repos.d/repo-dc1db.repo'
+LABEL "distribution-scope"="public" "vendor"="Red Hat, Inc." "build-date"="2024-10-30T23:56:36" "architecture"="x86_64" "vcs-type"="git" "vcs-ref"="4f8da2b64a13f2a264bd802d8909bf803211fb20" "io.k8s.description"="The Universal Base Image Minimal is a stripped down image that uses microdnf as a package manager. This base image is freely redistributable, but Red Hat only supports Red Hat technologies through subscriptions for Red Hat products. This image is maintained by Red Hat and updated regularly." "url"="https://access.redhat.com/containers/#/registry.access.redhat.com/ubi8-minimal/images/8.10-1130"
+ADD file:b7781adfc8c3da91aae5fda8dfb237d042034b072df64d3e8f4b9e8fcccd6c95 in /root/buildinfo/Dockerfile-ubi8-minimal-8.10-1130
+ADD file:f1a3be44bef5f9b1a54409adc10aca3651833d8060951e0d332afdf7143c71ba in /root/buildinfo/content_manifests/ubi8-minimal-container-8.10-1130.json
+LABEL release=1130
+RUN rm -rf /var/log/*
+CMD["/bin/bash"]
+ENVPATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV container oci
+LABEL io.openshift.tags="minimal rhel8"
+LABEL io.openshift.expose-services=""
+LABEL io.k8s.display-name="Red Hat Universal Base Image 8 Minimal"
+LABEL description="The Universal Base Image Minimal is a stripped down image that uses microdnf as a package manager. This base image is freely redistributable, but Red Hat only supports Red Hat technologies through subscriptions for Red Hat products. This image is maintained by Red Hat and updated regularly."
+LABEL summary="Provides the latest release of the minimal Red Hat Universal Base Image 8."
+LABEL com.redhat.license_terms="https://www.redhat.com/en/about/red-hat-end-user-license-agreements#UBI"
+LABEL com.redhat.component="ubi8-minimal-container" name="ubi8-minimal" version="8.10"
+LABEL maintainer="Red Hat, Inc."
+ADD multi:3c90ab5337bff98c4637c3daaf21dabff9f5344244ae5726f60764e747b8b02d in /etc/yum.repos.d/
+ADD file:5b1f650e1376d79fa3a65df4a154ea5166def95154b52c1c1097dfd8fc7d58eb in /tmp/tls-ca-bundle.pem
+RUN mv -f /etc/yum.repos.d/ubi.repo /tmp || :
+ADD file:59f03a594ab91b152b87807108cb693932cd7c5245598a0d1e0a38fa5b91bfbd in /
